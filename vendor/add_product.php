@@ -1,3 +1,74 @@
+<?php
+session_start(); 
+
+include '../conn.php';
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $product_name = $_POST['product_name'];
+    $category_id = $_POST['category_id'];
+    $description = $_POST['description'];
+    $price = $_POST['price'];
+    $price_type = $_POST['price_type']; // 'Per Piece' or 'Per Kilo'
+
+   // Handle file upload
+   if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] == 0) {
+    $target_dir = "uploads/";
+    $file_name = basename($_FILES["product_image"]["name"]);
+    $target_file = $target_dir . $file_name;
+    
+    // Check if file is a valid image type
+    $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (in_array($_FILES['product_image']['type'], $allowed_types)) {
+        if (move_uploaded_file($_FILES["product_image"]["tmp_name"], $target_file)) {
+            $image_path = $target_file;
+        } else {
+            echo "Sorry, there was an error uploading your file.";
+            $image_path = "uploads/default_image.png";
+        }
+    } else {
+        echo "Unsupported file type.";
+        $image_path = "uploads/default_image.png";
+    }
+    } else {
+        $image_path = "uploads/default_image.png";
+    }
+    
+    // Insert product into the database
+    if (!isset($_SESSION['upload_error'])) {
+        try {
+            // Check if the product already exists
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE product_name = ?");
+            $stmt->execute([$product_name]);
+            if ($stmt->fetchColumn() > 0) {
+                $_SESSION['error_message'] = "Product with this name already exists.";
+            } else {
+                $stmt = $conn->prepare("INSERT INTO products (product_name, category_id, description, price, price_type, image_path) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$product_name, $category_id, $description, $price, $price_type, $image_path]);
+                $_SESSION['success_message'] = "Product added successfully.";
+
+                // Redirect to the same page to prevent resubmission on refresh
+                header("Location: add_product.php");
+                exit();
+            }
+        } catch (PDOException $e) {
+            $_SESSION['error_message'] = "Error adding product: " . $e->getMessage();
+        }
+    }
+}
+
+// Fetch categories from the database for the dropdown
+$categories = [];
+try {
+    $sql = "SELECT * FROM categories";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "Error fetching categories: " . $e->getMessage();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,171 +76,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Product</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-     <!-- Bootstrap 5 CSS -->
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-     <!-- Font Awesome for Icons -->
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-     <!-- Chart.js for Graphs -->
-     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar {
-            background-color: #fff;
-        }
-        .navbar-brand img {
-            height: 40px;
-            width: auto;
-        }
-        .navbar-nav .nav-link {
-            color: #080808  !important;
-            font-size: 1.1em;
-            margin-right: 15px;
-        }
-        .nav-link:hover {
-            background-color: #c1c5c2;
-            color: #080808  !important;
-            border-radius: 5px;
-        }
-        .dropdown-menu {
-            min-width: 250px;
-        }
-        .dropdown-menu .dropdown-item:hover {
-            background-color: #c1c5c2;
-            color: white;
-        }
-        .fa-icon {
-            margin-right: 8px;
-        }
-        .logo-container {
-            display: flex;
-            align-items: center;
-            height: 100%; /* Make sure the container takes full height */
-        }
-        .logo-container img {
-            height: 100%; /* Set the logo height to fill the navbar */
-            max-height: 85px; /* Match the default navbar height or adjust as necessary */
-            width: 170px; /* Keep the aspect ratio */
-        }
-    </style>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-
- <!-- Advanced Navigation Bar with Icons -->
- <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-            <a class="navbar-brand logo-container" href="dashboard.php">
-                <img src="../images/pamilihannet.jpg" alt="PamilihanNet Logo">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-box fa-icon"></i>Product Management
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="add_category.php"><i class="fa-solid fa-list"></i>Add Category</a></li>
-                            <li><a class="dropdown-item" href="add_product.php"><i class="fa-solid fa-square-plus"></i> Add Product</a></li>
-                            <li><a class="dropdown-item" href="prodlist.php"><i class="fa-solid fa-eye"></i>View Product</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-chart-line fa-icon"></i>Sales Report</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-warehouse fa-icon"></i>Inventory Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-shield-alt fa-icon"></i>Security & Privacy Settings</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-icon"></i>Profile Management
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user fa-icon"></i>View Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit fa-icon"></i>Edit Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog fa-icon"></i>Account Settings</a></li>
-                        </ul>
-                    </li>
-                    <!-- Logout Button -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php" onclick="return confirm('Are you sure you want to log out?');"><i class="fas fa-sign-out-alt fa-icon"></i>Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php
+        include 'sidebar.php';
+    ?>
 
 <div class="d-flex justify-content-center">
-    <div class="card w-50 mt-4">
+    <div class="card w-75 mt-4">
         <h5 class="card-header">Add Product</h5>
         <div class="card-body">
             <div class="container mt-2">
-                <form>
+                <?php
+                    if (isset($_SESSION['success_message'])) {
+                        echo "<div class='alert alert-success'>" . $_SESSION['success_message'] . "</div>";
+                        unset($_SESSION['success_message']);
+                    }
+                    if (isset($_SESSION['error_message'])) {
+                        echo "<div class='alert alert-danger'>" . $_SESSION['error_message'] . "</div>";
+                        unset($_SESSION['error_message']);
+                    }
+                    if (isset($_SESSION['upload_error'])) {
+                        echo "<div class='alert alert-danger'>" . $_SESSION['upload_error'] . "</div>";
+                        unset($_SESSION['upload_error']);
+                    }
+                ?>
+                <form action="add_product.php" method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="productName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="productName" required>
+                        <label for="product_name" class="form-label">Product Name</label>
+                        <input type="text" name="product_name" id="product_name" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
-                        <label for="category" class="form-label">Category</label>
-                        <select id="category" class="form-select" required>
-                            <option selected disabled value="">Choose a category</option>
-                            <option value="electronics">Electronics</option>
-                            <option value="clothing">Clothing</option>
-                            <option value="food">Food</option>
-                            <!-- Add more categories as needed -->
+                        <label for="category_id" class="form-label">Category</label>
+                        <select name="category_id" id="category_id" class="form-control" required>
+                            <option value="">Select a Category</option>
+                            <?php foreach ($categories as $category) { ?>
+                                <option value="<?= htmlspecialchars($category['category_id']) ?>">
+                                    <?= htmlspecialchars($category['category_name']) ?>
+                                </option>
+                            <?php } ?>
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" rows="3" required></textarea>
+                        <textarea name="description" id="description" class="form-control" rows="3" required></textarea>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Unit Type</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="unitType" id="perPiece" value="perPiece" required>
-                            <label class="form-check-label" for="perPiece">
-                                Per Piece
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="unitType" id="perKilo" value="perKilo" required>
-                            <label class="form-check-label" for="perKilo">
-                                Per Kilo
-                            </label>
-                        </div>
-                    </div>
-
                     <div class="mb-3">
                         <label for="price" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="price" step="0.01" required>
+                        <input type="number" name="price" id="price" class="form-control" step="0.01" required>
                     </div>
-
                     <div class="mb-3">
-                        <label for="productImage" class="form-label">Upload Image</label>
-                        <input class="form-control" type="file" id="productImage" accept="image/*">
+                        <label for="price_type" class="form-label">Unit</label>
+                        <select name="price_type" id="price_type" class="form-control" required>
+                            <option value="Per Piece">Per Piece</option>
+                            <option value="Per Kilo">Per Kilo</option>
+                        </select>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">Save</button>
-
+                    <div class="mb-3">
+                        <label for="product_image" class="form-label">Product Image</label>
+                        <input type="file" name="product_image" id="product_image" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
                 </form>
+                <br>
+                
             </div>
         </div>
     </div>
 </div>
-    <!-- Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
+<!-- Bootstrap JS and Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
 </body>
 </html>
