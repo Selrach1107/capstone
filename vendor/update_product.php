@@ -1,28 +1,62 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "pamilihannet";
+include '../conn.php';
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+if (isset($_GET['id'])) {
+    $product_id = $_GET['id'];
+    $sql = "SELECT * FROM products WHERE product_id = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':id', $product_id);
+    $stmt->execute();
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $updates = [];
+        $params = [':id' => $product_id];
 
-// Get product ID from URL
-$product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+        if (isset($_POST['product_name']) && !empty($_POST['product_name'])) {
+            $updates[] = "product_name = :name";
+            $params[':name'] = $_POST['product_name'];
+        }
 
-// Fetch product details from the database
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->bind_param("i", $product_id);
-$stmt->execute();
-$product = $stmt->get_result()->fetch_assoc();
+        if (isset($_POST['category_id']) && !empty($_POST['category_id'])) {
+            $updates[] = "category_id = :category_id";
+            $params[':category_id'] = $_POST['category_id'];
+        }
 
-if (!$product) {
-    die("Product not found.");
+        if (isset($_POST['description']) && !empty($_POST['description'])) {
+            $updates[] = "description = :description";
+            $params[':description'] = $_POST['description'];
+        }
+
+        if (isset($_POST['price']) && !empty($_POST['price'])) {
+            $updates[] = "price = :price";
+            $params[':price'] = $_POST['price'];
+        }
+
+        if (isset($_POST['price_type']) && !empty($_POST['price_type'])) {
+            $updates[] = "price_type = :price_type";
+            $params[':price_type'] = $_POST['price_type'];
+        }
+
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $image = $_FILES['image']['name'];
+            $target = "uploads/" . basename($image);
+            move_uploaded_file($_FILES['image']['tmp_name'], $target);
+            $updates[] = "image = :image";
+            $params[':image'] = $image;
+        }
+
+        if (!empty($updates)) {
+            $sql = "UPDATE products SET " . implode(", ", $updates) . " WHERE product_id = :id";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+        
+            echo "<script>
+                    alert('Product updated successfully!');
+                    window.location.href = 'prodlist.php';
+                  </script>";
+        }
+    }
 }
 ?>
 
@@ -33,60 +67,51 @@ if (!$product) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Product</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Bootstrap 5 CSS -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+     <!-- Font Awesome for Icons -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-<div class="container mt-5">
-    <h2 class="mb-4">Update Product</h2>
-    <form action="product_handler.php" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>">
-        <input type="hidden" name="action" value="update">
+<?php
+include 'sidebar.php';
+?>
 
+<div class="container mt-5">
+    <h2>Update Product</h2>
+    <form action="update_product.php?id=<?= $product_id ?>" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
-            <label for="name" class="form-label">Product Name</label>
-            <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($product['name']); ?>" required>
+            <label for="product_name" class="form-label">Product Name</label>
+            <input type="text" id="product_name" name="product_name" class="form-control" value="<?= htmlspecialchars($product['product_name']) ?>">
         </div>
         <div class="mb-3">
             <label for="price" class="form-label">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" value="<?php echo htmlspecialchars($product['price']); ?>" required>
+            <input type="number" id="price" name="price" class="form-control" value="<?= htmlspecialchars($product['price']) ?>">
         </div>
         <div class="mb-3">
-            <label for="price_unit" class="form-label">Price Unit</label>
-            <select class="form-select" id="price_unit" name="price_unit" required>
-                <option value="per piece" <?php if ($product['price_unit'] === 'per piece') echo 'selected'; ?>>Per Piece</option>
-                <option value="per kilo" <?php if ($product['price_unit'] === 'per kilo') echo 'selected'; ?>>Per Kilo</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" value="<?php echo htmlspecialchars($product['quantity']); ?>" required>
-        </div>
-        <div class="mb-3">
-            <label for="quantity_unit" class="form-label">Quantity Unit</label>
-            <select class="form-select" id="quantity_unit" name="quantity_unit" required>
-                <option value="piece" <?php if ($product['quantity_unit'] === 'piece') echo 'selected'; ?>>Piece</option>
-                <option value="kilo" <?php if ($product['quantity_unit'] === 'kilo') echo 'selected'; ?>>Kilo</option>
+            <label for="price_type" class="form-label">Unit</label>
+            <select name="price_type" id="price_type" class="form-control" required>
+                <option value="Per Piece" <?= ($product['price_type'] == 'Per Piece') ? 'selected' : '' ?>>Per Piece</option>
+                <option value="Per Kilo" <?= ($product['price_type'] == 'Per Kilo') ? 'selected' : '' ?>>Per Kilo</option>
             </select>
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3" required><?php echo htmlspecialchars($product['description']); ?></textarea>
+            <textarea id="description" name="description" class="form-control"><?= htmlspecialchars($product['description']) ?></textarea>
         </div>
         <div class="mb-3">
-            <label for="image" class="form-label">Product Image</label>
-            <input type="file" class="form-control" id="image" name="image">
-            <?php if ($product['image']): ?>
-                <img src="<?php echo htmlspecialchars($product['image']); ?>" width="100" alt="Current Product Image">
-            <?php endif; ?>
+            <label for="image" class="form-label">Image</label>
+            <input type="file" id="image" name="image" class="form-control">
         </div>
         <button type="submit" class="btn btn-primary">Update Product</button>
     </form>
 </div>
 
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+
 </body>
 </html>
-
-<?php
-$stmt->close();
-$conn->close();
-?>
