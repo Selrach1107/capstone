@@ -1,7 +1,6 @@
 <?php
-session_start(); // Start session at the top of the script
+session_start(); 
 
-// Database connection
 $servername = "localhost"; 
 $username = "root"; 
 $password = ""; 
@@ -14,7 +13,6 @@ try {
     echo "Connection failed: " . $e->getMessage();
 }
 
-// Import PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -86,15 +84,15 @@ if (isset($_POST['register'])) {
                 'store_name' => $storeName,
                 'business_permit_number' => $businessPermitNumber,
                 'business_permit_image' => $businessPermitImage,
-                'password' => $hashedPassword // Store hashed password
+                'password' => $hashedPassword 
             ];
 
             // Send verification email
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'lorem.ipsum.sample.email@gmail.com'; // Replace with your email
-            $mail->Password   = 'novtycchbrhfyddx'; // Replace with your app password
+            $mail->Username   = 'lorem.ipsum.sample.email@gmail.com'; 
+            $mail->Password   = 'novtycchbrhfyddx'; 
             $mail->SMTPSecure = 'ssl';
             $mail->Port       = 465;
 
