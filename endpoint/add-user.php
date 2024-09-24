@@ -1,4 +1,7 @@
 <?php
+session_start(); // Start session at the top of the script
+
+// Database connection
 $servername = "localhost"; 
 $username = "root"; 
 $password = ""; 
@@ -21,6 +24,7 @@ require 'PHPMailer/src/SMTP.php';
 
 $mail = new PHPMailer(true);
 
+// Registration Process
 if (isset($_POST['register'])) {
     try {
         // Capture form data
@@ -33,13 +37,9 @@ if (isset($_POST['register'])) {
         $businessPermitNumber = $_POST['business_permit_number'];
         $businessPermitImage = $_POST['business_permit_image'];
         $password = $_POST['password'];
-        $confirmPassword = $_POST['confirm_password'];
-
+        $confirmPassword = $_POST['confirmPassword'];
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT); // Hash the password
-
-        // Start transaction
-        $conn->beginTransaction();
 
         // Check for duplicates
         $duplicateMsg = '';
@@ -75,28 +75,26 @@ if (isset($_POST['register'])) {
         if ($duplicateMsg === '') {
             $verificationCode = rand(100000, 999999);
 
-            // Insert new vendor record
-            $insertStmt = $conn->prepare("INSERT INTO `vendor` (`first_name`, `middle_name`, `last_name`, `phone_number`, `email`, `store_name`, `business_permit_number`, `business_permit_image`, `password`, `verification_code`) 
-            VALUES (:first_name, :middle_name, :last_name, :phone_number, :email, :store_name, :business_permit_number, :business_permit_image, :password, :verification_code)");
-
-            $insertStmt->bindParam(':first_name', $firstName, PDO::PARAM_STR);
-            $insertStmt->bindParam(':middle_name', $middleName, PDO::PARAM_STR);
-            $insertStmt->bindParam(':last_name', $lastName, PDO::PARAM_STR);
-            $insertStmt->bindParam(':phone_number', $phoneNumber, PDO::PARAM_STR);
-            $insertStmt->bindParam(':email', $email, PDO::PARAM_STR);
-            $insertStmt->bindParam(':store_name', $storeName, PDO::PARAM_STR);
-            $insertStmt->bindParam(':business_permit_number', $businessPermitNumber, PDO::PARAM_STR);
-            $insertStmt->bindParam(':business_permit_image', $businessPermitImage, PDO::PARAM_STR);
-            $insertStmt->bindParam(':password', $hashedPassword, PDO::PARAM_STR); // Use hashed password
-            $insertStmt->bindParam(':verification_code', $verificationCode, PDO::PARAM_INT);
-            $insertStmt->execute();
+            // Store form data and verification code in the session
+            $_SESSION['verification_code'] = $verificationCode;
+            $_SESSION['form_data'] = [
+                'first_name' => $firstName,
+                'middle_name' => $middleName,
+                'last_name' => $lastName,
+                'phone_number' => $phoneNumber,
+                'email' => $email,
+                'store_name' => $storeName,
+                'business_permit_number' => $businessPermitNumber,
+                'business_permit_image' => $businessPermitImage,
+                'password' => $hashedPassword // Store hashed password
+            ];
 
             // Send verification email
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'lorem.ipsum.sample.email@gmail.com';
-            $mail->Password   = 'novtycchbrhfyddx';
+            $mail->Username   = 'lorem.ipsum.sample.email@gmail.com'; // Replace with your email
+            $mail->Password   = 'novtycchbrhfyddx'; // Replace with your app password
             $mail->SMTPSecure = 'ssl';
             $mail->Port       = 465;
 
@@ -111,19 +109,12 @@ if (isset($_POST['register'])) {
             $mail->Body    = 'Your verification code is: ' . $verificationCode;
             $mail->send();
 
-            // Store user ID in session
-            session_start();
-            $userVerificationID = $conn->lastInsertId();
-            $_SESSION['user_verification_id'] = $userVerificationID;
-
             echo "
             <script>
-                alert('Check your email for verification code.');
+                alert('Check your email for the verification code.');
                 window.location.href = 'http://localhost/capstone/verification.php';
             </script>
             ";
-
-            $conn->commit();
         } else {
             echo "
             <script>
@@ -133,24 +124,42 @@ if (isset($_POST['register'])) {
             ";
         }
     } catch (PDOException $e) {
-        $conn->rollBack();
         echo "Error: " . $e->getMessage();
     }
 }
 
+// Verification Process
 if (isset($_POST['verify'])) {
     try {
-        $userVerificationID = $_POST['user_verification_id'];
         $verificationCode = $_POST['verification_code'];
 
-        $stmt = $conn->prepare("SELECT `verification_code` FROM `vendor` WHERE `id` = :user_verification_id");
-        $stmt->execute([
-            'user_verification_id' => $userVerificationID
-        ]);
-        $codeExist = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Check if the entered code matches the one stored in the session
+        if (isset($_SESSION['verification_code']) && intval($_SESSION['verification_code']) === intval($verificationCode)) {
+            // Retrieve the stored form data from the session
+            $formData = $_SESSION['form_data'];
 
-        if ($codeExist && $codeExist['verification_code'] == $verificationCode) {
+            // Insert the account data into the database
+            $insertStmt = $conn->prepare("INSERT INTO `vendor` 
+                (`first_name`, `middle_name`, `last_name`, `phone_number`, `email`, `store_name`, `business_permit_number`, 
+                `business_permit_image`, `password`) 
+                VALUES (:first_name, :middle_name, :last_name, :phone_number, :email, :store_name, :business_permit_number, 
+                :business_permit_image, :password)");
+
+            $insertStmt->bindParam(':first_name', $formData['first_name'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':middle_name', $formData['middle_name'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':last_name', $formData['last_name'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':phone_number', $formData['phone_number'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':email', $formData['email'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':store_name', $formData['store_name'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':business_permit_number', $formData['business_permit_number'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':business_permit_image', $formData['business_permit_image'], PDO::PARAM_STR);
+            $insertStmt->bindParam(':password', $formData['password'], PDO::PARAM_STR); // Use hashed password
+            $insertStmt->execute();
+
+            // Clear the session after successful verification
+            session_unset();
             session_destroy();
+
             echo "
             <script>
                 alert('Registered Successfully.');
@@ -158,15 +167,9 @@ if (isset($_POST['verify'])) {
             </script>
             ";
         } else {
-            // Delete the user if verification fails
-            $deleteStmt = $conn->prepare("DELETE FROM `vendor` WHERE `id` = :user_verification_id");
-            $deleteStmt->execute([
-                'user_verification_id' => $userVerificationID
-            ]);
-
             echo "
             <script>
-                alert('Incorrect Verification Code. Register Again.');
+                alert('Incorrect Verification Code. Try Again.');
                 window.location.href = 'http://localhost/capstone/verification.php';
             </script>
             ";
