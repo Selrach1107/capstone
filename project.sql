@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 07, 2024 at 10:18 PM
+-- Generation Time: Oct 15, 2024 at 10:34 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -48,17 +48,10 @@ INSERT INTO `admin` (`id`, `username`, `password`) VALUES
 
 CREATE TABLE `cart` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `quantity` int(11) DEFAULT 1
+  `product_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `cart`
---
-
-INSERT INTO `cart` (`id`, `user_id`, `product_id`, `quantity`) VALUES
-(6, 1, 20, 1);
 
 -- --------------------------------------------------------
 
@@ -79,7 +72,9 @@ CREATE TABLE `categories` (
 INSERT INTO `categories` (`id`, `seller_id`, `category_name`) VALUES
 (21, 7, 'Fish'),
 (22, 7, 'Cans'),
-(23, 7, 'Meat');
+(23, 7, 'Meat'),
+(24, 8, 'Meat'),
+(25, 8, 'Fish');
 
 -- --------------------------------------------------------
 
@@ -95,16 +90,19 @@ CREATE TABLE `products` (
   `unit_price` varchar(50) DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
   `description` text DEFAULT NULL,
-  `image` varchar(255) DEFAULT NULL
+  `image` varchar(255) DEFAULT NULL,
+  `image_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`id`, `seller_id`, `category_id`, `product_name`, `unit_price`, `price`, `description`, `image`) VALUES
-(19, 7, 21, 'Bangus', 'per piece', 100.00, 'FRESH', 'uploads/bangus.jpg'),
-(20, 7, 23, 'MANOK', 'per kilo', 120.00, 'FROM TAGAYTAY CHICKEN FARM', 'uploads/chicken.jpg');
+INSERT INTO `products` (`id`, `seller_id`, `category_id`, `product_name`, `unit_price`, `price`, `description`, `image`, `image_path`) VALUES
+(19, 7, 21, 'Bangus', 'per kilo', 230.00, 'FRESH padin', 'uploads/bangus.jpg', NULL),
+(24, 8, 25, 'Bangus', 'per piece', 100.00, 'sca', 'uploads/bangus.jpg', NULL),
+(25, 8, 25, 'MANOKA', 'per piece', 200.00, 'hahaha', 'uploads/fishbone.png', NULL),
+(26, 8, 24, 'talong', 'per piece', 20.00, 'davad', 'uploads/chicken.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -178,7 +176,8 @@ CREATE TABLE `seller` (
 --
 
 INSERT INTO `seller` (`id`, `first_name`, `middle_name`, `last_name`, `phone_number`, `email`, `store_name`, `business_permit_number`, `password`, `verification_code`, `registration_date`, `profile_picture`) VALUES
-(7, 'christian', 'charles', 'mabacas', '09177504261', 'christiancharles1107@gmail.com', 'CharleStore', 'CAV-2024-123456', '$2y$10$2rRGihXKMyXfj3IvozK37.V88otKl4rwOBCoLKFeqg4CTFJoEkYO6', NULL, '2024-10-07 17:41:17', 'profile_pictures/hotd.png');
+(7, 'christian', 'charles', 'mabacas', '09177504261', 'christiancharles1107@gmail.com', 'CharleStore', 'CAV-2024-123456', '$2y$10$2rRGihXKMyXfj3IvozK37.V88otKl4rwOBCoLKFeqg4CTFJoEkYO6', NULL, '2024-10-07 17:41:17', 'profile_pictures/hotd.png'),
+(8, 'Minato', 'Uzumaki', 'Namezikage', '09177504266', 'charlesmabacas19@gmail.com', 'MinatoStore', 'CAV-2024-246899', '$2y$10$Y.D9oH/m0muIrR2L6ygnmOuAMyBGrskVAHVs5raYgHapCnjYsEl2K', NULL, '2024-10-08 21:43:58', 'profile_pictures/iterative model.png');
 
 -- --------------------------------------------------------
 
@@ -241,8 +240,8 @@ ALTER TABLE `admin`
 --
 ALTER TABLE `cart`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `product_id` (`product_id`);
+  ADD KEY `product_id` (`product_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `categories`
@@ -303,19 +302,19 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `rider`
@@ -333,13 +332,13 @@ ALTER TABLE `rider_reg_requests`
 -- AUTO_INCREMENT for table `seller`
 --
 ALTER TABLE `seller`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `seller_reg_requests`
 --
 ALTER TABLE `seller_reg_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -355,8 +354,8 @@ ALTER TABLE `user`
 -- Constraints for table `cart`
 --
 ALTER TABLE `cart`
-  ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
-  ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+  ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `categories`
