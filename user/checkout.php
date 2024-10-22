@@ -2,9 +2,9 @@
 session_start();
 require 'config.php';
 
-// Ensure the user is logged in
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: ../index.php");
     exit;
 }
 
@@ -50,7 +50,7 @@ foreach ($cart_items as $item) {
 
     <?php if (empty($cart_items)): ?>
         <p>Your cart is empty. Please add items to your cart before checking out.</p>
-        <a href="cart.php" class="btn btn-primary">Go to Cart</a>
+        <a href="user_dashboard.php" class="btn btn-primary">Go to Cart</a>
     <?php else: ?>
         <h2>Cart Items</h2>
         <table class="table">
