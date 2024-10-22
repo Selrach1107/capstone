@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 15, 2024 at 10:34 PM
+-- Generation Time: Oct 23, 2024 at 01:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,7 +74,66 @@ INSERT INTO `categories` (`id`, `seller_id`, `category_name`) VALUES
 (22, 7, 'Cans'),
 (23, 7, 'Meat'),
 (24, 8, 'Meat'),
-(25, 8, 'Fish');
+(25, 8, 'Fish'),
+(26, 8, 'Vegetable'),
+(27, 8, 'Rice'),
+(28, 8, 'Cans');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chats`
+--
+
+CREATE TABLE `chats` (
+  `id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `receiver_id` int(11) NOT NULL,
+  `message` text NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `chats`
+--
+
+INSERT INTO `chats` (`id`, `sender_id`, `receiver_id`, `message`, `timestamp`) VALUES
+(1, 1, 7, 'hi', '2024-10-21 20:13:32'),
+(2, 1, 1, 'kamiusta?', '2024-10-21 20:28:07'),
+(3, 1, 1, 'lmlac', '2024-10-21 20:28:57'),
+(4, 1, 8, 'dsvv', '2024-10-21 20:29:37'),
+(5, 1, 1, 'hello po sir', '2024-10-21 20:30:02'),
+(6, 1, 8, 'hi', '2024-10-21 20:30:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `address` text NOT NULL,
+  `phone` varchar(15) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('pending','received','canceled') NOT NULL DEFAULT 'pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_details`
+--
+
+CREATE TABLE `order_details` (
+  `id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -100,9 +159,13 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `seller_id`, `category_id`, `product_name`, `unit_price`, `price`, `description`, `image`, `image_path`) VALUES
 (19, 7, 21, 'Bangus', 'per kilo', 230.00, 'FRESH padin', 'uploads/bangus.jpg', NULL),
-(24, 8, 25, 'Bangus', 'per piece', 100.00, 'sca', 'uploads/bangus.jpg', NULL),
-(25, 8, 25, 'MANOKA', 'per piece', 200.00, 'hahaha', 'uploads/fishbone.png', NULL),
-(26, 8, 24, 'talong', 'per piece', 20.00, 'davad', 'uploads/chicken.jpg', NULL);
+(27, 8, 25, 'Bangus', 'per piece', 100.00, 'Fresh Bangus', 'uploads/bangus.jpg', NULL),
+(28, 8, 24, 'Chicken', 'per kilo', 120.00, 'Fresh Chicken', 'uploads/chicken.jpg', NULL),
+(29, 8, 26, 'Eggplant/Talong', 'per kilo', 70.00, 'Fresh eggplant', 'uploads/eggplant.jpg', NULL),
+(30, 8, 27, 'Bigas ', 'per kilo', 52.00, 'Jasmine Rice', 'uploads/rice.jpg', NULL),
+(31, 8, 24, 'Pork Chop', 'per kilo', 130.00, 'Fresh Pork Chop', 'uploads/pork.jpg', NULL),
+(32, 8, 25, 'Tuna', 'per kilo', 150.00, 'Fresh Tuna', 'uploads/tuna.jpg', NULL),
+(33, 8, 26, 'Tomato', 'per kilo', 60.00, 'Fresh Tomato from Bagio', 'uploads/tomato.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -251,6 +314,26 @@ ALTER TABLE `categories`
   ADD KEY `seller_id` (`seller_id`);
 
 --
+-- Indexes for table `chats`
+--
+ALTER TABLE `chats`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `order_details`
+--
+ALTER TABLE `order_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `order_id` (`order_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
@@ -302,19 +385,37 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `chats`
+--
+ALTER TABLE `chats`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `order_details`
+--
+ALTER TABLE `order_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `rider`
@@ -362,6 +463,13 @@ ALTER TABLE `cart`
 --
 ALTER TABLE `categories`
   ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `seller` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `order_details`
+--
+ALTER TABLE `order_details`
+  ADD CONSTRAINT `order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
 
 --
 -- Constraints for table `products`
