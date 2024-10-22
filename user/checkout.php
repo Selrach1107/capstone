@@ -10,10 +10,11 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Fetch cart items for the logged-in user
-$query = "SELECT p.product_name, p.price, c.quantity, p.id AS product_id 
+// Fetch cart items along with the store name for the logged-in user
+$query = "SELECT s.store_name, p.product_name, p.price, c.quantity, p.id AS product_id 
           FROM cart c 
           JOIN products p ON c.product_id = p.id 
+          JOIN seller s ON p.seller_id = s.id  -- Join seller table to get store name
           WHERE c.user_id = :user_id";
 $stmt = $conn->prepare($query);
 $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
@@ -34,11 +35,17 @@ foreach ($cart_items as $item) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 </head>
 <body>
 <?php include 'sidebar.php' ?>
 
-<div class="container">
+<div class="container mt-4">
     <h1>Checkout</h1>
 
     <?php if (empty($cart_items)): ?>
@@ -49,6 +56,7 @@ foreach ($cart_items as $item) {
         <table class="table">
             <thead>
                 <tr>
+                    <th>Store Name</th>
                     <th>Product Name</th>
                     <th>Price</th>
                     <th>Quantity</th>
@@ -57,9 +65,10 @@ foreach ($cart_items as $item) {
             <tbody>
                 <?php foreach ($cart_items as $item): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($item['product_name']); ?></td>
-                        <td><?php echo htmlspecialchars($item['price']); ?></td>
-                        <td><?php echo htmlspecialchars($item['quantity']); ?></td>
+                        <td><?php echo htmlspecialchars($item['store_name']); ?></td> 
+                        <td><?php echo htmlspecialchars($item['product_name']); ?></td> 
+                        <td>₱<?php echo number_format($item['price'], 2); ?></td> 
+                        <td><?php echo htmlspecialchars($item['quantity']); ?></td> 
                     </tr>
                 <?php endforeach; ?>
             </tbody>
