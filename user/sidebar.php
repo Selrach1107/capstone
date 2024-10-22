@@ -137,7 +137,8 @@
     <br>
     <a href="user_dashboard.php"><i class="fas fa-home"></i> Home</a>
     <a href="profile.php"><i class="fas fa-user"></i> Profile</a>
-    <a href="#"><i class="fas fa-shopping-cart"></i> Cart</a>
+    <a href="#"><i class="fas fa-shopping-cart"></i> My Cart</a>
+    <a href="order.php"><i class="fa-solid fa-basket-shopping"></i> My Order</a>
     <a href="logout.php" onclick="return confirm('Are you sure you want to log out?');"><i class="fas fa-sign-out-alt"></i>Logout</a>
     </div>
 
@@ -150,7 +151,8 @@
     <div class="nav-links">
         <a href="user_dashboard.php"><i class="fas fa-home"></i> Home</a>
         <a href="profile.php"><i class="fas fa-user"></i> Profile</a>
-        <a href="#"><i class="fas fa-shopping-cart"></i> Cart</a>
+        <a href="cart.php"><i class="fas fa-shopping-cart"></i> My Cart</a>
+        <a href="order.php"><i class="fa-solid fa-basket-shopping"></i> My Order</a>
         <a href="logout.php" onclick="return confirm('Are you sure you want to log out?');"><i class="fas fa-sign-out-alt"></i>Logout</a>
     </div>
 </nav>
