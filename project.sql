@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 23, 2024 at 01:16 AM
+-- Generation Time: Nov 12, 2024 at 04:47 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,10 +74,7 @@ INSERT INTO `categories` (`id`, `seller_id`, `category_name`) VALUES
 (22, 7, 'Cans'),
 (23, 7, 'Meat'),
 (24, 8, 'Meat'),
-(25, 8, 'Fish'),
-(26, 8, 'Vegetable'),
-(27, 8, 'Rice'),
-(28, 8, 'Cans');
+(31, 8, 'String');
 
 -- --------------------------------------------------------
 
@@ -122,6 +119,13 @@ CREATE TABLE `orders` (
   `status` enum('pending','received','canceled') NOT NULL DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `user_id`, `full_name`, `address`, `phone`, `total_amount`, `order_date`, `status`) VALUES
+(9, 1, 'Christian Charles Mabacas', 'Tejeros, Convention Brgy, Ems CCAT', '09177504261', 350.00, '2024-11-08 06:25:45', 'pending');
+
 -- --------------------------------------------------------
 
 --
@@ -134,6 +138,14 @@ CREATE TABLE `order_details` (
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_details`
+--
+
+INSERT INTO `order_details` (`id`, `order_id`, `product_id`, `quantity`) VALUES
+(18, 9, 28, 1),
+(19, 9, 19, 1);
 
 -- --------------------------------------------------------
 
@@ -159,13 +171,8 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `seller_id`, `category_id`, `product_name`, `unit_price`, `price`, `description`, `image`, `image_path`) VALUES
 (19, 7, 21, 'Bangus', 'per kilo', 230.00, 'FRESH padin', 'uploads/bangus.jpg', NULL),
-(27, 8, 25, 'Bangus', 'per piece', 100.00, 'Fresh Bangus', 'uploads/bangus.jpg', NULL),
 (28, 8, 24, 'Chicken', 'per kilo', 120.00, 'Fresh Chicken', 'uploads/chicken.jpg', NULL),
-(29, 8, 26, 'Eggplant/Talong', 'per kilo', 70.00, 'Fresh eggplant', 'uploads/eggplant.jpg', NULL),
-(30, 8, 27, 'Bigas ', 'per kilo', 52.00, 'Jasmine Rice', 'uploads/rice.jpg', NULL),
-(31, 8, 24, 'Pork Chop', 'per kilo', 130.00, 'Fresh Pork Chop', 'uploads/pork.jpg', NULL),
-(32, 8, 25, 'Tuna', 'per kilo', 150.00, 'Fresh Tuna', 'uploads/tuna.jpg', NULL),
-(33, 8, 26, 'Tomato', 'per kilo', 60.00, 'Fresh Tomato from Bagio', 'uploads/tomato.jpg', NULL);
+(31, 8, 24, 'Pork Chop', 'per kilo', 130.00, 'Fresh Pork Chop', 'uploads/pork.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -385,13 +392,13 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `chats`
@@ -403,19 +410,19 @@ ALTER TABLE `chats`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `rider`
